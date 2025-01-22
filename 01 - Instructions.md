@@ -11,7 +11,7 @@ Les points clés du test sont:
 Pour réaliser la US, voici des identifiants pour notre API d'intégration:
 
 client_id: 7f16ffb1099c05049bb41b6a6453f3b2cb981358765a055328b339b3b0e053d8
-client_secret: <envoyé par SMS>
+client_secret: 5b46cea0c3b78e8a585d3c554e71b7096fc66d88609a0e71d90e3c78a010ab36
 
 URL de redirection post-login: https://fs.vmarigner.docker.dev-franceconnect.fr/api/login-callback
 URL de redirection post-logout: https://fs.vmarigner.docker.dev-franceconnect.fr/api/logout-callback

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <title><%= title %></title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr/dist/dsfr.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr/dist/dsfr.module.min.js"
+    ></script>
+    <script>
+      // Options disponibles à l'initialisation du DSFR
+      window.dsfr = { verbose: true, mode: 'manual' };
+    </script>
+    <!-- Script en version es6 module et nomodule pour les navigateurs le ne supportant pas -->
+    <script type="module" src="dsfr.nomodule.min.js"></script>
+    <script type="text/javascript" nomodule src="dsfr.nomodule.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Connexion avec FranceConnect</h1>
+    </header>
+
+    <main>
+      <!-- <button
+        class="fr-btn fr-btn--secondary fr-icon-login-fill"
+        onclick="location.href='<%= loginUrl %>'"
+      >
+        Se connecter avec FranceConnect
+      </button> -->
+
+      <div class="fr-connect-group">
+        <button class="fr-connect" id="france-connect" type="button">
+          <span class="fr-connect__login">S’identifier avec</span>
+          <span class="fr-connect__brand">FranceConnect</span>
+        </button>
+        <p>
+          <a
+            href="https://franceconnect.gouv.fr"
+            id="connect-link-1"
+            target="_blank"
+            rel="noopener"
+            title="Qu’est-ce que FranceConnect ? - nouvelle fenêtre"
+            >Qu’est-ce que FranceConnect ?</a
+          >
+        </p>
+      </div>
+    </main>
+  </body>
+</html>
