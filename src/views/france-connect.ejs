@@ -1,31 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <title><%= title %></title>
-    <link rel="stylesheet" href="/dsfr.min.css" />
-    <script type="module" src="/dsfr.module.min.js"></script>
-    <script
-      type="text/javascript"
-      nomodule
-      src="/dsfr.nomodule.min.js"
-    ></script>
-  </head>
+  <!-- Head.ejs include -->
+  <%- include('head') %>
   <body>
     <header>
       <h1>Connexion avec FranceConnect</h1>
     </header>
 
     <main>
-      <!-- <button
-        class="fr-btn fr-btn--secondary fr-icon-login-fill"
-        onclick="location.href='<%= loginUrl %>'"
-      >
-        Se connecter avec FranceConnect
-      </button> -->
-
       <div class="fr-connect-group">
         <button
-          onclick="location.href='<%= loginUrl %>'"
+          onclick="location.href='<%= redirectURL %>'"
           class="fr-connect"
           id="france-connect"
           type="button"
