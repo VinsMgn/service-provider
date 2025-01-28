@@ -1,9 +1,9 @@
 import { Controller, Get, Query, Render, Res, Session } from '@nestjs/common';
 import { Response } from 'express';
-import { AppService } from './app.service';
+import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
-import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
+import { AppService } from './app.service';
 import { AuthService } from './auth/auth.service';
 
 
@@ -22,28 +22,67 @@ export class AppController {
       };
   }
 
-  @Get('login-callback')
-  async loginCallback(
+  @Get('api/login-callback')
+   async loginCallback(
     @Query('code') authCode: string,
     @Res() res: Response,
     @Session() session: Record<string, any>,
   ): Promise<void> {
     const body = {
       grant_type: 'authorization_code',
-      redirect_uri: `${this.configService.get<string>('FS_URL')}${this.configService.get<string>('LOGIN_CALLBACK')}`,
+      // redirect_uri: `${this.configService.get<string>('FS_URL')}${this.configService.get<string>('LOGIN_CALLBACK')}`,
+      redirect_uri: `https://localhost:3000/api/login-callback`,
       client_id: this.configService.get<string>('CLIENT_ID'),
       client_secret: this.configService.get<string>('CLIENT_SECRET'),
       code: authCode,
     };
+    console.log("🚀 ~ AppController ~ body:", body)
 
     try {
-      const response = await axios.post(`${this.configService.get<string>('FC_URL')}${this.configService.get<string>('TOKEN_URL')}`, body);
+      const response = await axios({
+        method: 'POST',
+        data: body.toString(),
+        url: `${this.configService.get<string>('FC_URL')}${this.configService.get<string>('TOKEN_URL')}`,
+      })
+      // const response = await axios.post(`${this.configService.get<string>('FC_URL')}${this.configService.get<string>('TOKEN_URL')}`, body.toString(), {
+      //   headers: {
+      //     'Content-Type': 'application/x-www-form-urlencoded',
+      //   },
+      // });
       const data = response.data;
+      console.log("🚀 ~ AppController ~ data:", data)
       session.tokens = data;
       res.redirect('/user');
     } catch (error) {
-      console.error('Error during login callback:', error);
+      console.error('Error during login callback:', error.data);
       res.status(500).send('Login callback failed');
+    }
+  }
+
+  @Get('user')
+  @Render('user')
+  async renderUserPage(@Res() res: Response, @Session() session: Record<string, any>) {
+    if (!session.tokens) {
+      res.redirect('/');
+      return;
+    }
+
+    const accessToken = session.tokens.access_token;
+    try {
+      const response = await axios.get(`${this.configService.get<string>('FC_URL')}${this.configService.get<string>('USER_INFO_URL')}?schema=openid`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const data = response.data;
+      console.log("🚀 ~ AppController ~ data:", data)
+      return {
+        title: 'Informations utilisateur',
+        user: data,
+      };
+    } catch (error) {
+      console.error('Error while fetching user info:', error);
+      res.status(500).send('Failed to fetch user info');
     }
   }
 }
