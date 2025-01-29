@@ -1,67 +1,82 @@
 import { Controller, Get, Query, Render, Res, Session } from '@nestjs/common';
 import { Response } from 'express';
-import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { AppService } from './app.service';
-import { AuthService } from './auth/auth.service';
-
+import { FranceConnectService } from './france-connect/france-connect.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService, private readonly authService:AuthService, private readonly configService: ConfigService) {}
-
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly franceConnectService: FranceConnectService,
+  ) {}
 
   @Get()
   @Render('france-connect')
-  renderFranceConnectPage(@Res() res: Response, @Session() session: Record<string, any>) {
-      const redirectURL = this.authService.getFranceConnectUrl('7f16ffb1099c05049bb41b6a6453f3b2cb981358765a055328b339b3b0e053d8', 'https://fs.vmarigner.docker.dev-franceconnect.fr/api/login-callback');
-      return {
-        title: 'Connexion avec FranceConnect',
-        redirectURL,
-      };
+  renderFranceConnectPage() {
+    const redirectURL = this.franceConnectService.getFranceConnectUrl(
+      '7f16ffb1099c05049bb41b6a6453f3b2cb981358765a055328b339b3b0e053d8',
+      'https://fs.vmarigner.docker.dev-franceconnect.fr/api/login-callback',
+    );
+    return {
+      title: 'Connexion avec FranceConnect',
+      redirectURL,
+    };
   }
 
   @Get('api/login-callback')
-   async loginCallback(
+  async loginCallback(
     @Query('code') authCode: string,
     @Res() res: Response,
     @Session() session: Record<string, any>,
   ): Promise<void> {
-    const body = {
-      grant_type: 'authorization_code',
-      // redirect_uri: `${this.configService.get<string>('FS_URL')}${this.configService.get<string>('LOGIN_CALLBACK')}`,
-      redirect_uri: `https://localhost:3000/api/login-callback`,
-      client_id: this.configService.get<string>('CLIENT_ID'),
-      client_secret: this.configService.get<string>('CLIENT_SECRET'),
-      code: authCode,
-    };
-    console.log("🚀 ~ AppController ~ body:", body)
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append(
+      'redirect_uri',
+      `${this.configService.get<string>('FS_URL')}${this.configService.get<string>('LOGIN_CALLBACK')}`,
+    );
+    params.append(
+      'client_id',
+      this.configService.get<string>('CLIENT_ID') as string,
+    );
+    params.append(
+      'client_secret',
+      this.configService.get<string>('CLIENT_SECRET') as string,
+    );
+    params.append('code', authCode);
 
     try {
       const response = await axios({
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
         method: 'POST',
-        data: body.toString(),
+        data: params,
         url: `${this.configService.get<string>('FC_URL')}${this.configService.get<string>('TOKEN_URL')}`,
-      })
-      // const response = await axios.post(`${this.configService.get<string>('FC_URL')}${this.configService.get<string>('TOKEN_URL')}`, body.toString(), {
-      //   headers: {
-      //     'Content-Type': 'application/x-www-form-urlencoded',
-      //   },
-      // });
+      });
       const data = response.data;
-      console.log("🚀 ~ AppController ~ data:", data)
+      if (!session) {
+        console.error(
+          'Session is undefined. Ensure session middleware is configured correctly.',
+        );
+        res.status(500).send('Session is not available');
+        return;
+      }
       session.tokens = data;
       res.redirect('/user');
     } catch (error) {
-      console.error('Error during login callback:', error.data);
+      console.error('Error during login callback:', error);
       res.status(500).send('Login callback failed');
     }
   }
 
   @Get('user')
   @Render('user')
-  async renderUserPage(@Res() res: Response, @Session() session: Record<string, any>) {
+  async renderUserPage(
+    @Res() res: Response,
+    @Session() session: Record<string, any>,
+  ) {
     if (!session.tokens) {
       res.redirect('/');
       return;
@@ -69,16 +84,19 @@ export class AppController {
 
     const accessToken = session.tokens.access_token;
     try {
-      const response = await axios.get(`${this.configService.get<string>('FC_URL')}${this.configService.get<string>('USER_INFO_URL')}?schema=openid`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+      const response = await axios.get(
+        `${this.configService.get<string>('FC_URL')}${this.configService.get<string>('USER_INFO_URL')}?schema=openid`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      });
+      );
       const data = response.data;
-      console.log("🚀 ~ AppController ~ data:", data)
+      const user = this.franceConnectService.decodeJwtPayload(data);
       return {
         title: 'Informations utilisateur',
-        user: data,
+        user,
       };
     } catch (error) {
       console.error('Error while fetching user info:', error);
@@ -86,4 +104,3 @@ export class AppController {
     }
   }
 }
-
