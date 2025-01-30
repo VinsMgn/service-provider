@@ -22,11 +22,9 @@
         <%= user.email %>
       </div>
 
-      <div>
-        <form method="post" action="/logout">
-          <button type="submit">Se déconnecter</button>
-        </form>
-      </div>
+      <form action="/logout" method="GET" style="display: inline">
+        <button type="submit">Se déconnecter</button>
+      </form>
     </main>
   </body>
 </html>

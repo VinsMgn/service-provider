@@ -1,8 +1,17 @@
-import { Controller, Get, Query, Render, Res, Session } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Render,
+  Req,
+  Res,
+  Session,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { FranceConnectService } from './france-connect/france-connect.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Controller()
 export class AppController {
@@ -11,12 +20,17 @@ export class AppController {
     private readonly franceConnectService: FranceConnectService,
   ) {}
 
+  /**
+   * Renders the FranceConnect page by generating a redirect URL and returning it along with a title.
+   * @returns An object containing the title of the page and the redirect URL to go to identity provider.
+   */
   @Get()
   @Render('france-connect')
-  renderFranceConnectPage() {
+  renderFranceConnectPage(): { title: string; redirectURL: string } {
     const redirectURL = this.franceConnectService.getFranceConnectUrl(
       '7f16ffb1099c05049bb41b6a6453f3b2cb981358765a055328b339b3b0e053d8',
-      'https://fs.vmarigner.docker.dev-franceconnect.fr/api/login-callback',
+      // 'https://fs.vmarigner.docker.dev-franceconnect.fr/api/login-callback',
+      `${this.configService.get<string>('FS_URL')}${this.configService.get<string>('LOGIN_CALLBACK')}`,
     );
     return {
       title: 'Connexion avec FranceConnect',
@@ -24,6 +38,17 @@ export class AppController {
     };
   }
 
+  /**
+   * Handles the login callback by exchanging the authorization code for tokens
+   * and storing them in the session. Redirects the user to the /user page upon success.
+   *
+   * @param authCode - The authorization code received from the OAuth provider.
+   * @param res - The response object used to send the HTTP response.
+   * @param session - The session object used to store tokens.
+   * @returns A promise that resolves to void.
+   *
+   * @throws Will send a 500 status response if the session is not available or if the token exchange fails.
+   */
   @Get('api/login-callback')
   async loginCallback(
     @Query('code') authCode: string,
@@ -71,6 +96,16 @@ export class AppController {
     }
   }
 
+  /**
+   * Renders the user page with user information fetched from France Connect.
+   *
+   * @param res - The response object used to send the HTTP response.
+   * @param session - The session object containing user tokens.
+   *
+   * @returns An object containing the title and user information if successful, otherwise redirects or sends an error response.
+   *
+   * @throws Will send a 500 status code response if there is an error while fetching user info.
+   */
   @Get('user')
   @Render('user')
   async renderUserPage(
@@ -102,5 +137,47 @@ export class AppController {
       console.error('Error while fetching user info:', error);
       res.status(500).send('Failed to fetch user info');
     }
+  }
+
+  /**
+   * Handles the logout process by redirecting the user to the appropriate logout URL.
+   *
+   * @param res - The response object used to redirect the user.
+   * @param session - The session object containing user session data.
+   **/
+  @Get('logout')
+  logout(@Res() res: Response, @Session() session: Record<string, any>) {
+    const randomUUID = uuidv4();
+    const tokenHint = session.tokens.id_token;
+    const query = {
+      id_token_hint: tokenHint,
+      state: `state${randomUUID}`,
+      post_logout_redirect_uri: `${this.configService.get('FS_URL')}${this.configService.get('LOGOUT_CALLBACK')}`,
+    };
+    const logoutURL =
+      this.configService.get('FC_URL') + this.configService.get('LOGOUT_URL');
+    const queryParams = new URLSearchParams(query).toString();
+    const redirectURL = `${logoutURL}?${queryParams}`;
+    return res.redirect(redirectURL);
+  }
+
+  /**
+   * Callback de déconnexion pour détacher la session
+   * @param res Response from FC logout
+   * @param session Session to destroy
+   */
+  @Get('api/logout-callback')
+  logoutCallback(
+    @Res() res: Response,
+    @Session() session: Record<string, any>,
+  ) {
+    session.destroy((err: Error) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        res.status(500).send('Logout failed');
+      } else {
+        res.redirect('/');
+      }
+    });
   }
 }
