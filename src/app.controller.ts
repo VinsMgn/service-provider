@@ -88,6 +88,7 @@ export class AppController {
         res.status(500).send('Session is not available');
         return;
       }
+
       session.tokens = data;
       res.redirect('/user');
     } catch (error) {
