@@ -3,6 +3,8 @@
 **Pour démarrer le projet :**
 `yarn install`
 
+Puis `yarn start` ou `yarn start:dev` pour bénéficier du hot reload
+
 Il est nécessaire d'ajouter les variables d'environnement dans un fichier .env
 Voila la structure du fichier .env
 
