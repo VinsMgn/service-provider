@@ -1,21 +1,46 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FranceConnectService } from './france-connect.service';
 import { v4 as uuidv4 } from 'uuid';
+import { ConfigService } from '@nestjs/config';
 jest.mock('uuid');
 
 describe('FranceConnectService', () => {
   let service: FranceConnectService;
+  let configService: ConfigService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [FranceConnectService],
+      providers: [
+        FranceConnectService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              const configMock = {
+                FS_URL: 'http://mock-fs-url',
+                LOGIN_CALLBACK: '/api/login-callback',
+                CLIENT_ID: 'mock-client-id',
+                CLIENT_SECRET: 'mock-client-secret',
+                FC_URL: 'http://mock-fc-url',
+                TOKEN_URL: '/api/v2/token',
+                USER_INFO_URL: '/api/v2/userinfo',
+                LOGOUT_URL: '/api/v2/session/end',
+                AUTHORIZE_URL: '/api/v2/authorize',
+              };
+              return configMock[key];
+            }),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<FranceConnectService>(FranceConnectService);
+    configService = module.get<ConfigService>(ConfigService);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+    expect(configService).toBeDefined();
   });
 
   describe('getFranceConnectUrl', () => {
@@ -32,7 +57,7 @@ describe('FranceConnectService', () => {
       const url = service.getFranceConnectUrl(clientId, redirectUri);
 
       expect(url).toBe(
-        `https://fcp-low.integ01.dev-franceconnect.fr/api/v2/authorize?response_type=code&acr_values=eidas1&scope=openid+gender+given_name+family_name+email+preferred_username&client_id=${clientId}&redirect_uri=${redirectUri}&state=${mockState}&nonce=${mockNonce}`,
+        `http://mock-fc-url/api/v2/authorize?response_type=code&acr_values=eidas1&scope=openid+gender+given_name+family_name+email+preferred_username&client_id=${clientId}&redirect_uri=${redirectUri}&state=${mockState}&nonce=${mockNonce}`,
       );
     });
   });

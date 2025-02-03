@@ -55,17 +55,17 @@ describe('AppController', () => {
     jest.clearAllMocks();
   });
 
-  // describe('renderFranceConnectPage', () => {
-  //   it('should return a title and redirect URL', () => {
-  //     const result = appController.renderFranceConnectPage();
+  describe('renderFranceConnectPage', () => {
+    it('should return a title and redirect URL', () => {
+      const result = appController.renderFranceConnectPage();
 
-  //     expect(result).toEqual({
-  //       title: 'Connexion avec FranceConnect',
-  //       redirectURL: 'http://mock-redirect-url',
-  //     });
-  //     expect(franceConnectService.getFranceConnectUrl).toHaveBeenCalled();
-  //   });
-  // });
+      expect(result).toEqual({
+        title: 'Connexion avec FranceConnect',
+        redirectURL: 'http://mock-redirect-url',
+      });
+      expect(franceConnectService.getFranceConnectUrl).toHaveBeenCalled();
+    });
+  });
 
   describe('loginCallback', () => {
     it('should handle login callback successfully', async () => {
@@ -90,12 +90,6 @@ describe('AppController', () => {
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
       );
 
-      // expect(mockedAxios.post).toHaveBeenCalledWith(
-      //   expect.any(String), // The URL of the request
-      //   expect.any(URLSearchParams), // The data sent
-      //   { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }, // The headers
-      // );
-
       // Check that session.tokens was updated
       expect(session.tokens).toEqual({
         access_token: 'mock-access-token',
@@ -106,113 +100,113 @@ describe('AppController', () => {
       expect(res.redirect).toHaveBeenCalledWith('/user');
     });
 
-    // it('should handle login callback failure', async () => {
-    //   mockedAxios.post.mockRejectedValue(new Error('Mock error'));
+    it('should handle login callback failure', async () => {
+      mockedAxios.post.mockRejectedValue(new Error('Mock error'));
 
-    //   const res = {
-    //     redirect: jest.fn(),
-    //     status: jest.fn().mockReturnThis(),
-    //     send: jest.fn(),
-    //   } as unknown as Response;
+      const res = {
+        redirect: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as unknown as Response;
 
-    //   const session = { tokens: null };
+      const session = { tokens: null };
 
-    //   await appController.loginCallback('mock-code', res, session);
+      await appController.loginCallback('mock-code', res, session);
 
-    //   expect(res.status).toHaveBeenCalledWith(500);
-    //   expect(res.send).toHaveBeenCalledWith('Login callback failed');
-    // });
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith('Login callback failed');
+    });
   });
 
-  // describe('renderUserPage', () => {
-  //   it('should return user info if tokens exist', async () => {
-  //     const mockResponse = { data: { sub: 'mock-user' } };
-  //     mockedAxios.get.mockResolvedValue(mockResponse);
+  describe('renderUserPage', () => {
+    it('should return user info if tokens exist', async () => {
+      const mockResponse = { data: { sub: 'mock-user' } };
+      mockedAxios.get.mockResolvedValue(mockResponse);
 
-  //     const res = {
-  //       redirect: jest.fn(),
-  //       status: jest.fn().mockReturnThis(),
-  //       send: jest.fn(),
-  //     } as unknown as Response;
+      const res = {
+        redirect: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as unknown as Response;
 
-  //     const session = { tokens: { access_token: 'mock-access-token' } };
+      const session = { tokens: { access_token: 'mock-access-token' } };
 
-  //     const result = await appController.renderUserPage(res, session);
+      const result = await appController.renderUserPage(res, session);
 
-  //     expect(result).toEqual({
-  //       title: 'Informations utilisateur',
-  //       user: { name: 'Mock User' },
-  //     });
-  //     expect(franceConnectService.decodeJwtPayload).toHaveBeenCalledWith(
-  //       mockResponse.data,
-  //     );
-  //   });
+      expect(result).toEqual({
+        title: 'Informations utilisateur',
+        user: { name: 'Mock User' },
+      });
+      expect(franceConnectService.decodeJwtPayload).toHaveBeenCalledWith(
+        mockResponse.data,
+      );
+    });
 
-  //   it('should redirect to "/" if tokens are missing', async () => {
-  //     const res = {
-  //       redirect: jest.fn(),
-  //       status: jest.fn().mockReturnThis(),
-  //       send: jest.fn(),
-  //     } as unknown as Response;
+    it('should redirect to "/" if tokens are missing', async () => {
+      const res = {
+        redirect: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as unknown as Response;
 
-  //     const session = { tokens: null };
+      const session = { tokens: null };
 
-  //     await appController.renderUserPage(res, session);
+      await appController.renderUserPage(res, session);
 
-  //     expect(res.redirect).toHaveBeenCalledWith('/');
-  //   });
-  // });
+      expect(res.redirect).toHaveBeenCalledWith('/');
+    });
+  });
 
-  // describe('logout', () => {
-  //   it('should redirect to logout URL', () => {
-  //     const res = {
-  //       redirect: jest.fn(),
-  //     } as unknown as Response;
+  describe('logout', () => {
+    it('should redirect to logout URL', () => {
+      const res = {
+        redirect: jest.fn(),
+      } as unknown as Response;
 
-  //     const session = { tokens: { id_token: 'mock-id-token' } };
+      const session = { tokens: { id_token: 'mock-id-token' } };
 
-  //     appController.logout(res, session);
+      appController.logout(res, session);
 
-  //     expect(res.redirect).toHaveBeenCalledWith(
-  //       expect.stringContaining('/logout'),
-  //     );
-  //   });
-  // });
+      expect(res.redirect).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v2/session/end'),
+      );
+    });
+  });
 
-  // describe('logoutCallback', () => {
-  //   it('should destroy the session and redirect to "/"', () => {
-  //     const res = {
-  //       redirect: jest.fn(),
-  //       status: jest.fn().mockReturnThis(),
-  //       send: jest.fn(),
-  //     } as unknown as Response;
+  describe('logoutCallback', () => {
+    it('should destroy the session and redirect to "/"', () => {
+      const res = {
+        redirect: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as unknown as Response;
 
-  //     const session = {
-  //       destroy: jest.fn((callback) => callback(null)),
-  //     };
+      const session = {
+        destroy: jest.fn((callback) => callback(null)),
+      };
 
-  //     appController.logoutCallback(res, session);
+      appController.logoutCallback(res, session);
 
-  //     expect(session.destroy).toHaveBeenCalled();
-  //     expect(res.redirect).toHaveBeenCalledWith('/');
-  //   });
+      expect(session.destroy).toHaveBeenCalled();
+      expect(res.redirect).toHaveBeenCalledWith('/');
+    });
 
-  //   it('should handle session destruction errors', () => {
-  //     const res = {
-  //       redirect: jest.fn(),
-  //       status: jest.fn().mockReturnThis(),
-  //       send: jest.fn(),
-  //     } as unknown as Response;
+    it('should handle session destruction errors', () => {
+      const res = {
+        redirect: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as unknown as Response;
 
-  //     const session = {
-  //       destroy: jest.fn((callback) => callback(new Error('Mock error'))),
-  //     };
+      const session = {
+        destroy: jest.fn((callback) => callback(new Error('Mock error'))),
+      };
 
-  //     appController.logoutCallback(res, session);
+      appController.logoutCallback(res, session);
 
-  //     expect(session.destroy).toHaveBeenCalled();
-  //     expect(res.status).toHaveBeenCalledWith(500);
-  //     expect(res.send).toHaveBeenCalledWith('Logout failed');
-  //   });
-  // });
+      expect(session.destroy).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith('Logout failed');
+    });
+  });
 });
