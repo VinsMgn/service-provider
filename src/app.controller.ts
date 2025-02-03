@@ -5,14 +5,12 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { FranceConnectService } from './services/france-connect/france-connect.service';
 import { ROUTES } from './utils/enums/routes.enum';
-import { IdentityService } from './services/identity/identity.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly configService: ConfigService,
     private readonly franceConnectService: FranceConnectService,
-    private readonly identityService: IdentityService,
   ) {}
 
   /**
@@ -86,8 +84,6 @@ export class AppController {
       const user = this.franceConnectService.decodeJwtPayload(data.id_token);
 
       // Signer les données utilisateur
-      const signedData = this.identityService.signUserData(user);
-      console.log('🚀 ~ AppController ~ signedData:', signedData);
       session.tokens = data;
       res.redirect(ROUTES.USER);
     } catch (error) {
