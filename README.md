@@ -1,99 +1,51 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Fournisseur de système pour se connecter à France Connect
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+**Pour démarrer le projet :**
+`yarn install`
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Il est nécessaire d'ajouter les variables d'environnement dans un fichier .env
+Voila la structure du fichier .env
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ yarn install
+```
+CLIENT_ID=7f16ffb1099c05049bb41b6a6453f3b2cb981358765a055328b339b3b0e053d8
+CLIENT_SECRET=client-secret
+FC_URL=https://fcp-low.integ01.dev-franceconnect.fr
+FS_URL=https://fs.vmarigner.docker.dev-franceconnect.fr
+AUTHORIZE_URL=/api/v2/authorize
+TOKEN_URL=/api/v2/token
+USER_INFO_URL=/api/v2/userinfo
+LOGOUT_URL=/api/v2/session/end
+LOGIN_CALLBACK=/api/login-callback
+LOGOUT_CALLBACK=/api/logout-callback
 ```
 
-## Compile and run the project
+Pour précision, il y a un souci de redirection après le login et après le logout. En effet travaillant avec le port 3000 et après configuration du fichier host je n'ai pas réussi à faire la redirection automatique vers le port 3000, et si je place le port 3000 dans les éléments de configuration ou dans les URL, je suis confronté à une erreur FranceConnect car l'URL n'est surement pas la bonne.
 
-```bash
-# development
-$ yarn run start
+## Méthode d'authentification :
 
-# watch mode
-$ yarn run start:dev
+- Se connecter à : https://fs.vmarigner.docker.dev-franceconnect.fr:3000
+- Sélectionner le FI : FIP1-LOW
+- Crédentials à utiliser : test / 123
+- Confirmer l'identité d'Angela Claire Louise DUBOIS
+- Une fois la confirmation, rajouter "3000" dans l'URL comme suit https://fs.vmarigner.docker.dev-franceconnect.fr:3000/api/login-callback?code=lR2ACZt-jKB9MnTd12LkMCtcihiznRzHro3lhjfIYwy&state=1928b0e3-ea20-4e25-ad4b-65e4ad823fcb&iss=https%3A%2F%2Ffcp-low.integ01.dev-franceconnect.fr%2Fapi%2Fv2
+- Arrivée sur la page /user affichant de façon brut les données de l'utilisateur
 
-# production mode
-$ yarn run start:prod
-```
+## Méthode de déconnexion
 
-## Run tests
+- Cliquer sur se déconnecter tout en bas de la liste sur la page user
+- Ici aussi, il est nécessaire de rajouter, après la déconnexion, le port 3000 dans l'URL comme suit :
+  https://fs.vmarigner.docker.dev-franceconnect.fr:3000/api/logout-callback?state=state3bf02328-e1c4-4f80-94e7-bef5007037f5
 
-```bash
-# unit tests
-$ yarn run test
+### Pour lancer les tests unitaires
 
-# e2e tests
-$ yarn run test:e2e
+Il faut lancer la commande `yarn test`
+Dans l'état actuel, il y a un test qui ressort en erreur. Cela est causé par le mock de la méthode POST d'axios. Je n'arrive pas à affecter la valeur mockée au retour du post.
 
-# test coverage
-$ yarn run test:cov
-```
+### Lien du découpage des user stories
 
-## Deployment
+[Document User stories](https://docs.google.com/document/d/1iIdbUNyQS2iTMPY6bld9FlrG5N44JRmz5gKsX0aItLs/edit?usp=sharing)
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Reste à faire
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ yarn install -g mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Reconnaître l'utilisateur lors des prochaines connexions
+- Sauvegarder les données d'identité reçues après une connexion réussie (l'affichage est fait uniquement, je ne stock pas les informations encore. Je comptais créer un service identity, pour stocker avec l'algorithme de signature ES256 le token reçu dans la session)
