@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { ConfigService } from '@nestjs/config';
-import { FranceConnectService } from './france-connect/france-connect.service';
+import { FranceConnectService } from './services/france-connect/france-connect.service';
 import { Response } from 'express';
 import axios from 'axios';
 

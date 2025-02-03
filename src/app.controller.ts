@@ -2,7 +2,7 @@ import { Controller, Get, Query, Render, Res, Session } from '@nestjs/common';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { FranceConnectService } from './france-connect/france-connect.service';
+import { FranceConnectService } from './services/france-connect/france-connect.service';
 import { v4 as uuidv4 } from 'uuid';
 import { ROUTES } from './utils/enums/routes.enum';
 
@@ -23,14 +23,6 @@ export class AppController {
     @Res() res: Response,
     @Session() session: Record<string, any>,
   ): { title: string; redirectURL: string } {
-    if (session.user) {
-      console.log('🚀 ~ AppController ~ session.user:', session.user);
-      res.redirect(ROUTES.USER);
-      // return {
-      //   title: 'Informations utilisateur',
-      //   user: session.user,
-      // };
-    }
     const redirectURL = this.franceConnectService.getFranceConnectUrl(
       this.configService.get<string>('CLIENT_ID') || '',
       `${this.configService.get<string>('FS_URL')}${this.configService.get<string>('LOGIN_CALLBACK')}`,
