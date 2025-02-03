@@ -2,15 +2,17 @@ import { Controller, Get, Query, Render, Res, Session } from '@nestjs/common';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { FranceConnectService } from './services/france-connect/france-connect.service';
 import { v4 as uuidv4 } from 'uuid';
+import { FranceConnectService } from './services/france-connect/france-connect.service';
 import { ROUTES } from './utils/enums/routes.enum';
+import { IdentityService } from './services/identity/identity.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly configService: ConfigService,
     private readonly franceConnectService: FranceConnectService,
+    private readonly identityService: IdentityService,
   ) {}
 
   /**
@@ -19,10 +21,7 @@ export class AppController {
    */
   @Get()
   @Render('france-connect')
-  renderFranceConnectPage(
-    @Res() res: Response,
-    @Session() session: Record<string, any>,
-  ): { title: string; redirectURL: string } {
+  renderFranceConnectPage(): { title: string; redirectURL: string } {
     const redirectURL = this.franceConnectService.getFranceConnectUrl(
       this.configService.get<string>('CLIENT_ID') || '',
       `${this.configService.get<string>('FS_URL')}${this.configService.get<string>('LOGIN_CALLBACK')}`,
@@ -83,7 +82,12 @@ export class AppController {
         res.status(500).send('Session is not available');
         return;
       }
+      // Décoder les données utilisateur à partir du token
+      const user = this.franceConnectService.decodeJwtPayload(data.id_token);
 
+      // Signer les données utilisateur
+      const signedData = this.identityService.signUserData(user);
+      console.log('🚀 ~ AppController ~ signedData:', signedData);
       session.tokens = data;
       res.redirect(ROUTES.USER);
     } catch (error) {
