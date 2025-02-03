@@ -1,17 +1,10 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Render,
-  Req,
-  Res,
-  Session,
-} from '@nestjs/common';
+import { Controller, Get, Query, Render, Res, Session } from '@nestjs/common';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { FranceConnectService } from './france-connect/france-connect.service';
 import { v4 as uuidv4 } from 'uuid';
+import { ROUTES } from './utils/enums/routes.enum';
 
 @Controller()
 export class AppController {
@@ -26,10 +19,20 @@ export class AppController {
    */
   @Get()
   @Render('france-connect')
-  renderFranceConnectPage(): { title: string; redirectURL: string } {
+  renderFranceConnectPage(
+    @Res() res: Response,
+    @Session() session: Record<string, any>,
+  ): { title: string; redirectURL: string } {
+    if (session.user) {
+      console.log('🚀 ~ AppController ~ session.user:', session.user);
+      res.redirect(ROUTES.USER);
+      // return {
+      //   title: 'Informations utilisateur',
+      //   user: session.user,
+      // };
+    }
     const redirectURL = this.franceConnectService.getFranceConnectUrl(
-      '7f16ffb1099c05049bb41b6a6453f3b2cb981358765a055328b339b3b0e053d8',
-      // 'https://fs.vmarigner.docker.dev-franceconnect.fr/api/login-callback',
+      this.configService.get<string>('CLIENT_ID') || '',
       `${this.configService.get<string>('FS_URL')}${this.configService.get<string>('LOGIN_CALLBACK')}`,
     );
     return {
@@ -90,7 +93,7 @@ export class AppController {
       }
 
       session.tokens = data;
-      res.redirect('/user');
+      res.redirect(ROUTES.USER);
     } catch (error) {
       console.error('Error during login callback:', error);
       res.status(500).send('Login callback failed');
@@ -114,7 +117,7 @@ export class AppController {
     @Session() session: Record<string, any>,
   ) {
     if (!session.tokens) {
-      res.redirect('/');
+      res.redirect(ROUTES.HOME);
       return;
     }
 
@@ -129,6 +132,8 @@ export class AppController {
         },
       );
       const data = response.data;
+      // Store safely the user info in the session
+      session.user = data;
       const user = this.franceConnectService.decodeJwtPayload(data);
       return {
         title: 'Informations utilisateur',
@@ -177,7 +182,7 @@ export class AppController {
         console.error('Error destroying session:', err);
         res.status(500).send('Logout failed');
       } else {
-        res.redirect('/');
+        res.redirect(ROUTES.HOME);
       }
     });
   }
